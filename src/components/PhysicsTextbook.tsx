@@ -57,7 +57,7 @@ export const PhysicsTextbook: React.FC<PhysicsTextbookProps> = ({ pdfUrl }) => {
   };
 
   return (
-    <div className="flex h-full min-h-[800px]">
+    <div className="flex h-full">
       {/* PDF Viewer */}
       <div className="flex-1 min-w-0">
         <BeautifulPDFViewer 
@@ -68,7 +68,7 @@ export const PhysicsTextbook: React.FC<PhysicsTextbookProps> = ({ pdfUrl }) => {
       </div>
 
       {/* Physics Visualization Panel */}
-      <div className="w-[40%] min-w-[460px] border-l border-border physics-animation-container">
+      <div className="w-[40%] min-w-[400px] border-l border-border physics-animation-container">
         <PhysicsVisualization 
           concept={activeConcept}
           isVisible={!!activeConcept}

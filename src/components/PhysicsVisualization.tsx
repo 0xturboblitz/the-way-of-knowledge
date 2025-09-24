@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from './ui/button';
 import { RotateCcw } from 'lucide-react';
 import { P5Runner } from '@/components/P5Runner';
+import { PhysicsLoader } from './ui/PhysicsLoader';
 import type { P5SketchSpec } from '@/lib/claude';
 
 interface PhysicsVisualizationProps {
@@ -27,10 +28,9 @@ export const PhysicsVisualization: React.FC<PhysicsVisualizationProps> = ({
               <div className="w-12 h-12 bg-accent/20 rounded-full animate-physics-pulse"></div>
             </div>
           </div>
-          <h3 className="text-lg font-medium text-foreground mb-2">Interactive Physics Visualizations</h3>
+          <h3 className="text-lg font-medium text-foreground mb-2">Interactive Physics</h3>
           <p className="text-sm text-muted-foreground max-w-sm">
-            Select any text in Griffiths' textbook to get a live p5 animation
-            that illustrates the concept.
+            Select any text to get a live animation.
           </p>
         </div>
       </div>
@@ -58,20 +58,19 @@ export const PhysicsVisualization: React.FC<PhysicsVisualizationProps> = ({
       <div className="flex-1 relative">
         <P5Runner spec={sketchSpec || null} className="w-full h-full" />
         {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="bg-background/80 backdrop-blur-sm border border-border px-4 py-2 rounded-md text-sm text-muted-foreground">
-              Generating animation...
-            </div>
+          <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm">
+            <PhysicsLoader 
+              size="md"
+              text="Generating physics animation..."
+              className="animate-fade-in-elegant"
+            />
           </div>
         )}
       </div>
 
       {concept && (
         <div className="p-4 border-t border-border bg-card/30 max-h-32 overflow-y-auto">
-          <h4 className="text-sm font-medium text-foreground mb-2">Highlighted Concept:</h4>
-          <p className="text-xs text-muted-foreground italic">
-            "{concept.substring(0, 200)}{concept.length > 200 ? '...' : ''}"
-          </p>
+          <h4 className="text-sm font-medium text-foreground mb-2">Highlighted Concept: <span className="italic">{concept.substring(0, 200)}{concept.length > 200 ? '...' : ''}</span></h4>
           {sketchSpec?.meta?.hints && sketchSpec.meta.hints.length > 0 && (
             <ul className="mt-2 list-disc pl-5 text-xs text-muted-foreground">
               {sketchSpec.meta.hints.map((h, i) => (

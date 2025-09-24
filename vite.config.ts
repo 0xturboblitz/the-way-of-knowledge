@@ -61,7 +61,7 @@ You MUST return a JSON object with this exact structure:
     "draw": "JavaScript code body for draw function"
   },
   "meta": {
-    "hints": ["Array of short hint strings"]
+    "hints": ["Array of 3 short hint strings"]
   }
 }
 
@@ -73,7 +73,8 @@ CONSTRAINTS AND CONTRACT:
 - Keep drawing performant: avoid creating new arrays/objects in draw loops unnecessarily.
 - The code in setup/draw must be valid, self-contained JavaScript bodies, not wrapped in function declarations.
 - IMPORTANT: All newlines in JavaScript code strings must be escaped as \\n, not actual newlines.
-- CRITICAL: The background color MUST be light/white (like '#ffffff', '#f8f9fa', 'hsl(220, 20%, 95%)') for visibility.
+- CRITICAL: The background color MUST be light/white (like '#ffffff', '#f8f9fa', 'hsl(220, 20%, 95%)') for visibility.\
+- DO NOT USE WHITE FOR THE ILLUSTRATIONS, It's the background color already.
 - Return ONLY the JSON object, no markdown, no explanations, no code fences.
 `;
 
