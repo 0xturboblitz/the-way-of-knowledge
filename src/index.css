@@ -174,4 +174,133 @@ All colors MUST be HSL.
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-foreground;
   }
+
+  /* PDF Viewer specific styles */
+  .pdf-viewer-container {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .pdf-viewer-container:hover {
+    box-shadow: var(--shadow-elegant);
+  }
+
+  .pdf-page {
+    @apply transition-all duration-200 ease-in-out;
+    filter: drop-shadow(0 4px 12px hsl(var(--primary) / 0.1));
+  }
+
+  .pdf-page:hover {
+    filter: drop-shadow(0 8px 24px hsl(var(--primary) / 0.15));
+  }
+
+  /* Text selection highlight */
+  .textLayer span[data-span] {
+    @apply transition-colors duration-150 ease-in-out;
+  }
+
+  .textLayer span[data-span]:hover {
+    @apply bg-accent/20;
+  }
+
+  /* Enhanced text selection styling */
+  .textLayer::selection {
+    @apply bg-accent/30;
+  }
+
+  .textLayer::-moz-selection {
+    @apply bg-accent/30;
+  }
+
+  /* Make text selectable and improve selection appearance */
+  .textLayer {
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+  }
+
+  /* Improve text selection feedback */
+  .textLayer span[data-span]:active {
+    @apply bg-accent/40;
+  }
+
+  /* Loading animation for PDF */
+  @keyframes pdf-loading-pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  .pdf-loading {
+    animation: pdf-loading-pulse 2s ease-in-out infinite;
+  }
+
+  /* Fullscreen mode styles */
+  .pdf-fullscreen {
+    @apply fixed inset-0 z-50 bg-background;
+  }
+
+  /* Button hover effects */
+  .pdf-control-button {
+    @apply transition-all duration-150 ease-in-out;
+  }
+
+  .pdf-control-button:hover {
+    @apply bg-accent/10 scale-105;
+  }
+
+  .pdf-control-button:active {
+    @apply scale-95;
+  }
+
+  /* React-PDF specific styles */
+  .react-pdf__Document {
+    @apply flex justify-center;
+    width: 100%;
+  }
+
+  .react-pdf__Page {
+    @apply shadow-lg;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .react-pdf__Page__canvas {
+    @apply transition-all duration-200 ease-in-out;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .react-pdf__Page__textContent {
+    @apply transition-all duration-150 ease-in-out;
+    max-width: 100%;
+  }
+
+  .react-pdf__Page__textContent span {
+    @apply transition-colors duration-150 ease-in-out;
+  }
+
+  .react-pdf__Page__textContent span:hover {
+    @apply bg-accent/20;
+  }
+
+  .react-pdf__Page__annotations {
+    @apply transition-all duration-150 ease-in-out;
+    max-width: 100%;
+  }
+
+  /* Ensure PDF content doesn't overflow horizontally */
+  .react-pdf__Page__textContent,
+  .react-pdf__Page__annotations {
+    overflow: visible;
+  }
+
+  /* Better text rendering for PDF content */
+  .react-pdf__Page__textContent span {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
 }

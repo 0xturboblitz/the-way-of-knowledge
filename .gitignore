@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+experiments
+
+public/cmaps/
+public/standard_fonts/
+public/wasm/
