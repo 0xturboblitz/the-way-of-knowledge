@@ -3,7 +3,7 @@ import { PhysicsTextbook } from '@/components/PhysicsTextbook';
 
 const Index = () => {
   // Local PDF file - using full-size PDF for reliability
-  const pdfUrl = "/electrodynamics.pdf";
+  const pdfUrl = "/electrodynamics-high-res.pdf";
   
   // Alternative PDF URLs (commented out)
   // const pdfUrl = "https://www.hlevkin.com/hlevkin/90MathPhysBioBooks/Physics/Physics/Electrodynamics/David%20J.%20Griffiths%20-%20Introduction%20to%20Electrodynamics-Prentice%20Hall%20(1999).pdf";
@@ -39,7 +39,7 @@ const Index = () => {
       <footer className="border-t border-border bg-card/50 p-4">
         <div className="container mx-auto text-center">
           <p className="text-sm text-muted-foreground">
-            Inspired by <em>The Way of Code</em> • Physics visualizations powered by Three.js • 
+            Inspired by <em>The Way of Code</em> • Live physics animations powered by p5.js • 
             Textbook: <em>Introduction to Electrodynamics</em> (Chapters 1-5) by David J. Griffiths
           </p>
         </div>

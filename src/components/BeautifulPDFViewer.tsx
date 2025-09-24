@@ -24,7 +24,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 
 interface BeautifulPDFViewerProps {
   pdfUrl: string;
-  onTextSelection?: (text: string, context: string) => void;
+  onTextSelection?: (text: string, context: string, pageNumber: number, fullPageText: string) => void;
   className?: string;
 }
 
@@ -41,6 +41,7 @@ export const BeautifulPDFViewer = forwardRef<HTMLDivElement, BeautifulPDFViewerP
     const contentContainerRef = useRef<HTMLDivElement>(null);
     const [containerWidth, setContainerWidth] = useState<number>(800);
     const [containerHeight, setContainerHeight] = useState<number>(800);
+    const [currentPageFullText, setCurrentPageFullText] = useState<string>("");
 
     const documentOptions = React.useMemo(() => ({
       cMapUrl: '/cmaps/',
@@ -74,72 +75,93 @@ export const BeautifulPDFViewer = forwardRef<HTMLDivElement, BeautifulPDFViewerP
       };
     }, []);
 
-    // Handle text selection in PDF
-    const handleTextSelection = useCallback((event: Event) => {
+    // Core selection processing (shared by multiple triggers)
+    const processCurrentSelection = useCallback((toastFeedback: boolean) => {
       if (!onTextSelection) return;
-      
       const selection = window.getSelection();
-      if (!selection || selection.toString().trim().length === 0) return;
-      
+      if (!selection) return;
       const selectedText = selection.toString().trim();
-      if (selectedText.length < 3) return; // Ignore very short selections
-      
-      // Get context around the selection (optional)
+      if (!selectedText || selectedText.length < 3) return;
+      if (selection.rangeCount === 0) return;
       const range = selection.getRangeAt(0);
-      const container = range.commonAncestorContainer;
+      const container = range.commonAncestorContainer as Node;
+      const viewerEl = containerRef.current;
+      if (viewerEl && !viewerEl.contains(container.nodeType === Node.TEXT_NODE ? (container.parentNode as Node) : (container as Node))) {
+        return;
+      }
       let context = '';
-      
       if (container.nodeType === Node.TEXT_NODE) {
-        const parentElement = container.parentElement;
-        if (parentElement) {
-          context = parentElement.textContent || '';
-        }
+        const parentElement = (container as Node).parentElement as Element | null;
+        if (parentElement) context = parentElement.textContent || '';
       } else if (container.nodeType === Node.ELEMENT_NODE) {
         context = (container as Element).textContent || '';
       }
-      
-      // Clean up context (remove extra whitespace)
       context = context.replace(/\s+/g, ' ').trim();
-      
-      // Show visual feedback
-      toast.success(`Selected: "${selectedText.substring(0, 50)}${selectedText.length > 50 ? '...' : ''}"`);
-      
-      // Call the callback with selected text and context
-      onTextSelection(selectedText, context);
-      
-      // Optional: Clear selection after processing
-      // selection.removeAllRanges();
-    }, [onTextSelection]);
+      if (toastFeedback) {
+        toast.success(`Selected: "${selectedText.substring(0, 50)}${selectedText.length > 50 ? '...' : ''}"`);
+      }
+      onTextSelection(selectedText, context, pageNumber, currentPageFullText);
+    }, [onTextSelection, pageNumber, currentPageFullText]);
+
+    // Handle text selection in PDF (mouse/touch end)
+    const handleTextSelection = useCallback((event: Event) => {
+      processCurrentSelection(true);
+    }, [processCurrentSelection]);
 
     // Setup text selection listeners for all text layers
     const setupTextSelectionListeners = useCallback(() => {
       if (!onTextSelection) return;
       
       // Remove existing listeners first
-      const existingTextLayers = document.querySelectorAll('.textLayer');
+      const existingTextLayers = document.querySelectorAll('.textLayer, .react-pdf__Page__textContent');
       existingTextLayers.forEach(layer => {
-        layer.removeEventListener('mouseup', handleTextSelection);
-        layer.removeEventListener('touchend', handleTextSelection);
+        layer.removeEventListener('mouseup', handleTextSelection as EventListener);
+        layer.removeEventListener('touchend', handleTextSelection as EventListener);
       });
+      if (contentContainerRef.current) {
+        contentContainerRef.current.removeEventListener('mouseup', handleTextSelection as EventListener);
+        contentContainerRef.current.removeEventListener('touchend', handleTextSelection as EventListener);
+      }
       
       // Add listeners to all text layers
-      const textLayers = document.querySelectorAll('.textLayer');
+      const textLayers = document.querySelectorAll('.textLayer, .react-pdf__Page__textContent');
       textLayers.forEach(layer => {
-        layer.addEventListener('mouseup', handleTextSelection);
-        layer.addEventListener('touchend', handleTextSelection);
+        layer.addEventListener('mouseup', handleTextSelection as EventListener);
+        layer.addEventListener('touchend', handleTextSelection as EventListener);
       });
+      if (contentContainerRef.current) {
+        // Fallback: listen on container in case class names differ
+        contentContainerRef.current.addEventListener('mouseup', handleTextSelection as EventListener);
+        contentContainerRef.current.addEventListener('touchend', handleTextSelection as EventListener);
+      }
     }, [onTextSelection, handleTextSelection]);
 
     // Cleanup text selection listeners when component unmounts or page changes
     useEffect(() => {
       return () => {
-        const textLayers = document.querySelectorAll('.textLayer');
+        const textLayers = document.querySelectorAll('.textLayer, .react-pdf__Page__textContent');
         textLayers.forEach(layer => {
-          layer.removeEventListener('mouseup', handleTextSelection);
-          layer.removeEventListener('touchend', handleTextSelection);
+          layer.removeEventListener('mouseup', handleTextSelection as EventListener);
+          layer.removeEventListener('touchend', handleTextSelection as EventListener);
         });
+        if (contentContainerRef.current) {
+          contentContainerRef.current.removeEventListener('mouseup', handleTextSelection as EventListener);
+          contentContainerRef.current.removeEventListener('touchend', handleTextSelection as EventListener);
+        }
       };
     }, [handleTextSelection, pageNumber]);
+
+    // Robust selection detection across reloads and dynamic layers
+    useEffect(() => {
+      const onSelChange = () => {
+        // slight delay to allow DOM/layout to settle
+        window.setTimeout(() => processCurrentSelection(false), 80);
+      };
+      document.addEventListener('selectionchange', onSelChange);
+      return () => {
+        document.removeEventListener('selectionchange', onSelChange);
+      };
+    }, [processCurrentSelection]);
 
     // PDF.js event handlers
     const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
@@ -163,6 +185,28 @@ export const BeautifulPDFViewer = forwardRef<HTMLDivElement, BeautifulPDFViewerP
       setTimeout(() => {
         setupTextSelectionListeners();
       }, 200);
+      
+      // Extract full text of current page from text layer(s)
+      setTimeout(() => {
+        try {
+          const viewer = containerRef.current;
+          if (!viewer) return;
+          const layers = viewer.querySelectorAll('.textLayer, .react-pdf__Page__textContent');
+          // Pick last textLayer (current rendered page) or concatenate
+          let fullText = '';
+          layers.forEach(layer => {
+            const t = (layer as HTMLElement).innerText || (layer as HTMLElement).textContent || '';
+            if (t) fullText += (fullText ? '\n' : '') + t;
+          });
+          if (fullText.trim().length > 0) {
+            // Normalize whitespace
+            fullText = fullText.replace(/\s+/g, ' ').trim();
+            setCurrentPageFullText(fullText);
+          }
+        } catch (e) {
+          console.warn('Failed to extract full page text', e);
+        }
+      }, 400);
     }, [setupTextSelectionListeners]);
 
     const onPageLoadError = useCallback((error: Error) => {

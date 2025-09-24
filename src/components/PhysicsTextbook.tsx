@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { PhysicsVisualization } from './PhysicsVisualization';
 import { BeautifulPDFViewer } from './BeautifulPDFViewer';
 import { toast } from 'sonner';
+import { requestClaudeAnimation, type P5SketchSpec } from '@/lib/claude';
 
 interface PhysicsTextbookProps {
   pdfUrl: string;
@@ -9,11 +10,50 @@ interface PhysicsTextbookProps {
 
 export const PhysicsTextbook: React.FC<PhysicsTextbookProps> = ({ pdfUrl }) => {
   const [activeConcept, setActiveConcept] = useState<string | null>(null);
+  const [spec, setSpec] = useState<P5SketchSpec | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const abortRef = useRef<AbortController | null>(null);
+  const debounceTimerRef = useRef<number | null>(null);
 
-  const handleTextSelection = (text: string, context: string) => {
-    if (text.length > 10) { // Only process meaningful text segments
-      setActiveConcept(text);
+  const requestAnimation = (selectionText: string, pageContext: string, pageNumber: number | null) => {
+    if (abortRef.current) {
+      abortRef.current.abort();
     }
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setLoading(true);
+    requestClaudeAnimation({ selectionText, pageContext, pageNumber, signal: controller.signal })
+      .then(result => {
+        setSpec(result);
+      })
+      .catch(err => {
+        if (controller.signal.aborted) return;
+        console.error(err);
+        toast.error('Animation request failed');
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+  };
+
+  const handleTextSelection = (text: string, context: string, pageNumber: number, fullPageText: string) => {
+    const meaningful = (text || '').trim();
+    if (meaningful.length <= 3) return;
+    setActiveConcept(meaningful);
+    const fullContext = fullPageText && fullPageText.length > context.length ? fullPageText : context;
+
+    // Debounce a few seconds to avoid multiple requests during progressive selections
+    if (debounceTimerRef.current) {
+      window.clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = window.setTimeout(() => {
+      console.log('handleTextSelection');
+      console.log('text:', text);
+      console.log('context:', context);
+      console.log('pageNumber:', pageNumber);
+      console.log('fullPageText:', fullPageText);
+      requestAnimation(meaningful, fullContext, pageNumber);
+    }, 1800);
   };
 
   return (
@@ -32,6 +72,8 @@ export const PhysicsTextbook: React.FC<PhysicsTextbookProps> = ({ pdfUrl }) => {
         <PhysicsVisualization 
           concept={activeConcept}
           isVisible={!!activeConcept}
+          sketchSpec={spec}
+          isLoading={loading}
         />
       </div>
     </div>
