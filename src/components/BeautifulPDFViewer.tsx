@@ -130,9 +130,6 @@ export const BeautifulPDFViewer = forwardRef<HTMLDivElement, BeautifulPDFViewerP
       // Update last selection tracking
       lastSelectionRef.current = { text: selectedText, timestamp: now };
       
-      if (toastFeedback) {
-        toast.success(`Selected: "${selectedText.substring(0, 50)}${selectedText.length > 50 ? '...' : ''}"`);
-      }
       onTextSelection(selectedText, context, pageNumber, currentPageFullText);
     }, [onTextSelection, pageNumber, currentPageFullText]);
 

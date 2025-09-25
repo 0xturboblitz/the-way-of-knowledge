@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
     name: "dev-claude-animation-endpoint",
     apply: "serve" as const,
     configureServer(server: any) {
-      server.middlewares.use("/api/claude-animation", async (req: any, res: any) => {
+      server.middlewares.use("/api/animation", async (req: any, res: any) => {
         if (req.method !== "POST") {
           res.statusCode = 405;
           res.setHeader("Content-Type", "application/json");
@@ -45,7 +45,10 @@ export default defineConfig(({ mode }) => {
             return;
           }
 
-          const system = `You are an expert physics educator and p5.js creative coder. Create a p5 animation spec based on a selected passage and the full page context from a physics textbook. The animation must help illustrate the core concept in a concise, visually clear way suitable for a sidebar canvas.
+          const system = `
+You are an expert physics educator and p5.js creative coder.
+Create a p5 animation spec based on a selected passage and the full page context from a physics textbook.
+The animation must help illustrate the core concept in a concise, visually clear way suitable for a sidebar canvas.
 
 You MUST return a JSON object with this exact structure:
 {
@@ -53,7 +56,7 @@ You MUST return a JSON object with this exact structure:
   "title": "Short descriptive title",
   "concept": "One sentence describing what is being illustrated",
   "sketch": {
-    "background": "Light CSS color like '#f8f9fa' or 'hsl(220, 20%, 95%)' - MUST be light/white",
+    "background": "#F5F4EF",
     "frameRate": 30,
     "noLoop": false,
     "pixelDensity": 1,
@@ -65,16 +68,28 @@ You MUST return a JSON object with this exact structure:
   }
 }
 
+WEBGL AND 3D CAPABILITIES:
+- The canvas runs in WEBGL mode by default, giving you access to 3D graphics
+- You can use 3D primitives: p.box(), p.sphere(), p.cylinder(), p.cone(), p.torus(), p.plane()
+- 3D transformations: p.translate(), p.rotate(), p.rotateX(), p.rotateY(), p.rotateZ(), p.scale()
+- Camera controls: p.camera(), p.perspective(), p.ortho()
+- Lighting: p.ambientLight(), p.directionalLight(), p.pointLight(), p.spotLight()
+- Materials: p.ambientMaterial(), p.specularMaterial(), p.normalMaterial(), p.texture()
+- Use p.push() and p.pop() to save/restore transformation matrix
+- 3D coordinates: x (left-right), y (up-down), z (forward-back from screen)
+
 CONSTRAINTS AND CONTRACT:
-- Do NOT call p.createCanvas. The host will call p.createCanvas(ctx.width, ctx.height) and resize it.
-- Use only (p, state, ctx) provided by the host. p is the p5 instance.
+- Do NOT call p.createCanvas. The host will call p.createCanvas(ctx.width, ctx.height, p.WEBGL) automatically.
+- Use only (p, state, ctx) provided by the host. p is the p5 instance with WebGL enabled.
 - Use ctx.width and ctx.height to size elements so it fits parent, never exceeding page height.
 - Do not import or reference external libraries. Only standard p5 APIs.
 - Keep drawing performant: avoid creating new arrays/objects in draw loops unnecessarily.
 - The code in setup/draw must be valid, self-contained JavaScript bodies, not wrapped in function declarations.
 - IMPORTANT: All newlines in JavaScript code strings must be escaped as \\n, not actual newlines.
-- CRITICAL: The background color MUST be light/white (like '#ffffff', '#f8f9fa', 'hsl(220, 20%, 95%)') for visibility.\
-- DO NOT USE WHITE FOR THE ILLUSTRATIONS, It's the background color already.
+- CRITICAL: The background color MUST be exactly '#F5F4EF' for consistency with the application design.
+- DO NOT USE #F5F4EF or similar light colors for the illustrations, as that's the background color.
+- Prefer 3D visualizations when they help illustrate physics concepts (fields, waves, particles, etc.)
+- Use lighting and materials to make 3D objects clearly visible against the light background
 - Return ONLY the JSON object, no markdown, no explanations, no code fences.
 `;
 

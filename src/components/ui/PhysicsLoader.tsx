@@ -12,83 +12,131 @@ export const PhysicsLoader: React.FC<PhysicsLoaderProps> = ({
   size = 'md',
   text = 'Generating animation...'
 }) => {
-  const sizeClasses = {
-    sm: 'w-16 h-16',
-    md: 'w-24 h-24',
-    lg: 'w-32 h-32'
+  const containerSizes = {
+    sm: 'w-20 h-20',
+    md: 'w-28 h-28',
+    lg: 'w-36 h-36'
   };
 
-  const particleSizes = {
-    sm: 'w-2 h-2',
-    md: 'w-3 h-3',
-    lg: 'w-4 h-4'
+  const dotSizes = {
+    sm: 'w-1 h-1',
+    md: 'w-1.5 h-1.5',
+    lg: 'w-2 h-2'
   };
 
   return (
     <div className={cn("flex flex-col items-center justify-center p-8", className)}>
-      {/* Main orbital system */}
-      <div className={cn("relative", sizeClasses[size])}>
-        {/* Central nucleus */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-4 h-4 bg-gradient-to-r from-accent to-primary rounded-full animate-pulse shadow-lg shadow-accent/50" />
-        </div>
+      {/* Futuristic particle cloud */}
+      <div className={cn("relative", containerSizes[size])}>
         
-        {/* Orbital rings */}
-        <div className="absolute inset-0 border border-accent/40 rounded-full animate-spin-slow" />
-        <div className="absolute inset-2 border border-primary/30 rounded-full animate-spin-reverse-slow" />
-        <div className="absolute inset-4 border border-muted-foreground/25 rounded-full animate-spin-slower" />
-        
-        {/* Orbiting electrons */}
+        {/* Central cluster - inner ring */}
         <div className="absolute inset-0 animate-spin-slow">
           <div className={cn(
-            "absolute -top-1 left-1/2 transform -translate-x-1/2 bg-accent rounded-full shadow-lg shadow-accent/50",
-            particleSizes[size]
-          )} />
-        </div>
-        
-        <div className="absolute inset-2 animate-spin-reverse-slow">
+            "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-accent rounded-full shadow-sm shadow-accent/50",
+            dotSizes[size]
+          )} style={{ transform: 'translate(-50%, -50%) translate(12px, 0px)' }} />
           <div className={cn(
-            "absolute -top-1 left-1/2 transform -translate-x-1/2 bg-primary rounded-full shadow-lg shadow-primary/40",
-            particleSizes[size]
-          )} />
-        </div>
-        
-        <div className="absolute inset-4 animate-spin-slower">
+            "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-primary rounded-full shadow-sm shadow-primary/50",
+            dotSizes[size]
+          )} style={{ transform: 'translate(-50%, -50%) translate(-12px, 0px)' }} />
           <div className={cn(
-            "absolute -top-1 left-1/2 transform -translate-x-1/2 bg-muted-foreground rounded-full shadow-lg shadow-muted-foreground/30",
-            particleSizes[size]
-          )} />
-        </div>
-        
-        {/* Additional particles for more dynamic effect */}
-        <div className="absolute inset-0 animate-spin-slow" style={{ animationDelay: '0.5s' }}>
+            "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-accent/80 rounded-full shadow-sm shadow-accent/30",
+            dotSizes[size]
+          )} style={{ transform: 'translate(-50%, -50%) translate(0px, 12px)' }} />
           <div className={cn(
-            "absolute top-1/2 -right-1 transform -translate-y-1/2 bg-accent/80 rounded-full opacity-70",
-            particleSizes[size]
-          )} />
+            "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-primary/80 rounded-full shadow-sm shadow-primary/30",
+            dotSizes[size]
+          )} style={{ transform: 'translate(-50%, -50%) translate(0px, -12px)' }} />
         </div>
-        
-        <div className="absolute inset-2 animate-spin-reverse-slow" style={{ animationDelay: '1s' }}>
+
+        {/* Middle ring */}
+        <div className="absolute inset-0 animate-spin-reverse-slow">
           <div className={cn(
-            "absolute top-1/2 -right-1 transform -translate-y-1/2 bg-primary/70 rounded-full opacity-70",
-            particleSizes[size]
-          )} />
+            "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-accent/70 rounded-full shadow-sm shadow-accent/40",
+            dotSizes[size]
+          )} style={{ transform: 'translate(-50%, -50%) translate(20px, 8px)' }} />
+          <div className={cn(
+            "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-primary/70 rounded-full shadow-sm shadow-primary/40",
+            dotSizes[size]
+          )} style={{ transform: 'translate(-50%, -50%) translate(-20px, -8px)' }} />
+          <div className={cn(
+            "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-muted-foreground/80 rounded-full shadow-sm shadow-muted-foreground/30",
+            dotSizes[size]
+          )} style={{ transform: 'translate(-50%, -50%) translate(8px, -20px)' }} />
+          <div className={cn(
+            "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-accent/60 rounded-full shadow-sm shadow-accent/30",
+            dotSizes[size]
+          )} style={{ transform: 'translate(-50%, -50%) translate(-8px, 20px)' }} />
+          <div className={cn(
+            "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-primary/60 rounded-full shadow-sm shadow-primary/30",
+            dotSizes[size]
+          )} style={{ transform: 'translate(-50%, -50%) translate(16px, -12px)' }} />
+          <div className={cn(
+            "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-muted-foreground/70 rounded-full shadow-sm shadow-muted-foreground/25",
+            dotSizes[size]
+          )} style={{ transform: 'translate(-50%, -50%) translate(-16px, 12px)' }} />
         </div>
-        
-        {/* Electric field lines effect */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-0 left-1/2 w-px h-full bg-gradient-to-b from-transparent via-accent to-transparent transform -translate-x-1/2" />
-          <div className="absolute left-0 top-1/2 h-px w-full bg-gradient-to-r from-transparent via-accent to-transparent transform -translate-y-1/2" />
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-transparent via-primary/15 to-transparent transform rotate-45" />
-          <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-transparent via-primary/15 to-transparent transform -rotate-45" />
+
+        {/* Outer floating particles */}
+        <div className="absolute inset-0 animate-spin-slower">
+          <div className={cn(
+            "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-accent/50 rounded-full shadow-sm shadow-accent/30",
+            dotSizes[size]
+          )} style={{ transform: 'translate(-50%, -50%) translate(28px, 4px)' }} />
+          <div className={cn(
+            "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-primary/50 rounded-full shadow-sm shadow-primary/30",
+            dotSizes[size]
+          )} style={{ transform: 'translate(-50%, -50%) translate(-28px, -4px)' }} />
+          <div className={cn(
+            "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-muted-foreground/60 rounded-full shadow-sm shadow-muted-foreground/20",
+            dotSizes[size]
+          )} style={{ transform: 'translate(-50%, -50%) translate(4px, -28px)' }} />
+          <div className={cn(
+            "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-accent/40 rounded-full shadow-sm shadow-accent/25",
+            dotSizes[size]
+          )} style={{ transform: 'translate(-50%, -50%) translate(-4px, 28px)' }} />
         </div>
-        
-        {/* Electromagnetic wave ripples */}
-        <div className="absolute inset-0 animate-ping-slow opacity-15">
-          <div className="w-full h-full border-2 border-accent rounded-full" />
+
+        {/* Floating independent particles with different animations */}
+        <div className="absolute inset-0 animate-pulse" style={{ animationDuration: '2s' }}>
+          <div className={cn(
+            "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-accent/40 rounded-full shadow-sm shadow-accent/20",
+            dotSizes[size]
+          )} style={{ transform: 'translate(-50%, -50%) translate(24px, 16px)' }} />
+          <div className={cn(
+            "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-primary/40 rounded-full shadow-sm shadow-primary/20",
+            dotSizes[size]
+          )} style={{ transform: 'translate(-50%, -50%) translate(-24px, -16px)' }} />
         </div>
-        <div className="absolute inset-0 animate-ping-slower opacity-10" style={{ animationDelay: '1s' }}>
-          <div className="w-full h-full border-2 border-primary rounded-full" />
+
+        <div className="absolute inset-0 animate-pulse" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }}>
+          <div className={cn(
+            "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-muted-foreground/50 rounded-full shadow-sm shadow-muted-foreground/20",
+            dotSizes[size]
+          )} style={{ transform: 'translate(-50%, -50%) translate(16px, -24px)' }} />
+          <div className={cn(
+            "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-accent/35 rounded-full shadow-sm shadow-accent/15",
+            dotSizes[size]
+          )} style={{ transform: 'translate(-50%, -50%) translate(-16px, 24px)' }} />
+        </div>
+
+        {/* Subtle expanding rings for depth */}
+        <div className="absolute inset-0 animate-ping opacity-5" style={{ animationDuration: '3s' }}>
+          <div className="w-full h-full border border-accent/20 rounded-full" />
+        </div>
+        <div className="absolute inset-2 animate-ping opacity-3" style={{ animationDuration: '4s', animationDelay: '1s' }}>
+          <div className="w-full h-full border border-primary/15 rounded-full" />
+        </div>
+
+        {/* Central glow dot */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className={cn(
+            "bg-gradient-to-r from-accent/60 to-primary/60 rounded-full animate-pulse shadow-lg",
+            dotSizes[size]
+          )} style={{ 
+            boxShadow: '0 0 8px rgba(var(--accent), 0.3), 0 0 16px rgba(var(--primary), 0.2)',
+            animationDuration: '1.5s'
+          }} />
         </div>
       </div>
       

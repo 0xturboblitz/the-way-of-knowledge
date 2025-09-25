@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { PhysicsVisualization } from './PhysicsVisualization';
 import { BeautifulPDFViewer } from './BeautifulPDFViewer';
 import { toast } from 'sonner';
-import { requestClaudeAnimation, type P5SketchSpec } from '@/lib/claude';
+import { requestAnimation, type P5SketchSpec } from '@/lib/animation';
 
 interface PhysicsTextbookProps {
   pdfUrl: string;
@@ -15,14 +15,14 @@ export const PhysicsTextbook: React.FC<PhysicsTextbookProps> = ({ pdfUrl }) => {
   const abortRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<number | null>(null);
 
-  const requestAnimation = (selectionText: string, pageContext: string, pageNumber: number | null) => {
+  const requestAnim = (selectionText: string, pageContext: string, pageNumber: number | null) => {
     if (abortRef.current) {
       abortRef.current.abort();
     }
     const controller = new AbortController();
     abortRef.current = controller;
     setLoading(true);
-    requestClaudeAnimation({ selectionText, pageContext, pageNumber, signal: controller.signal })
+    requestAnimation({ selectionText, pageContext, pageNumber, signal: controller.signal })
       .then(result => {
         setSpec(result);
       })
@@ -52,7 +52,8 @@ export const PhysicsTextbook: React.FC<PhysicsTextbookProps> = ({ pdfUrl }) => {
       console.log('context:', context);
       console.log('pageNumber:', pageNumber);
       console.log('fullPageText:', fullPageText);
-      requestAnimation(meaningful, fullContext, pageNumber);
+      toast.success(`Selected: "${meaningful.substring(0, 50)}${meaningful.length > 50 ? '...' : ''}"`);
+      requestAnim(meaningful, fullContext, pageNumber);
     }, 1800);
   };
 

@@ -3,7 +3,7 @@ import { Button } from './ui/button';
 import { RotateCcw } from 'lucide-react';
 import { P5Runner } from '@/components/P5Runner';
 import { PhysicsLoader } from './ui/PhysicsLoader';
-import type { P5SketchSpec } from '@/lib/claude';
+import type { P5SketchSpec } from '@/lib/animation';
 
 interface PhysicsVisualizationProps {
   concept: string | null;

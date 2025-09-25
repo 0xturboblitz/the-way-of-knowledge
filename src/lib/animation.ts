@@ -7,21 +7,21 @@ export interface P5SketchSpec {
     frameRate: number;
     noLoop: boolean;
     pixelDensity: number;
-    setup: string; // JS body
-    draw: string;  // JS body
+    setup: string;
+    draw: string;
   };
   meta?: {
     hints?: string[];
   };
 }
 
-export async function requestClaudeAnimation(params: {
+export async function requestAnimation(params: {
   selectionText: string;
   pageContext: string;
   pageNumber: number | null;
   signal?: AbortSignal;
 }): Promise<P5SketchSpec> {
-  const response = await fetch("/api/claude-animation", {
+  const response = await fetch("/api/animation", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({

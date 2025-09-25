@@ -36,13 +36,13 @@ const Index = () => {
       </main>
 
       {/* Footer - Compact */}
-      <footer className="border-t border-border bg-card/50 py-2 px-4 flex-shrink-0">
+      {/* <footer className="border-t border-border bg-card/50 py-2 px-4 flex-shrink-0">
         <div className="container mx-auto text-center">
           <p className="text-xs text-muted-foreground">
             Inspired by <em>The Way of Code</em> • Live physics animations powered by p5.js
           </p>
         </div>
-      </footer>
+      </footer> */}
     </div>
   );
 };
