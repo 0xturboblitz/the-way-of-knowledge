@@ -76,7 +76,6 @@ export const BeautifulPDFViewer = forwardRef<HTMLDivElement, BeautifulPDFViewerP
         setContainerWidth(width || 800);
         setContainerHeight(height || 800);
         setViewportHeight(scrollContainer.clientHeight);
-        console.log('Updated dimensions:', { width, height, viewportHeight: scrollContainer.clientHeight });
       };
 
       updateDimensions();
@@ -304,17 +303,6 @@ export const BeautifulPDFViewer = forwardRef<HTMLDivElement, BeautifulPDFViewerP
       const minPages = 3;
       const actualEndPage = Math.max(endPage, startPage + minPages - 1);
       
-      console.log('Virtual scrolling calc:', {
-        scrollTop,
-        viewportHeight,
-        pageHeight,
-        startPage,
-        endPage: actualEndPage,
-        scale,
-        actualPageHeight,
-        numPages
-      });
-      
       return { start: startPage, end: Math.min(numPages, actualEndPage) };
     }, [scrollTop, viewportHeight, numPages, scale, BUFFER_PAGES, ESTIMATED_PAGE_HEIGHT, actualPageHeight]);
 
@@ -352,13 +340,10 @@ export const BeautifulPDFViewer = forwardRef<HTMLDivElement, BeautifulPDFViewerP
       // Find the correct scroll container - it should be the element with overflow-auto
       const scrollContainer = containerRef.current?.querySelector('.overflow-auto') as HTMLElement;
       
-      console.log('Scroll container found:', scrollContainer, 'numPages:', numPages);
-      
       if (!scrollContainer || !numPages) return;
 
       const handleScroll = () => {
         const currentScrollTop = scrollContainer.scrollTop;
-        console.log('Scroll event - scrollTop:', currentScrollTop, 'viewportHeight:', viewportHeight);
         setScrollTop(currentScrollTop);
 
         // Calculate current visible page based on scroll position

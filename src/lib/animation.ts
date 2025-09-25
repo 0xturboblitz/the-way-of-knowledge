@@ -34,7 +34,7 @@ export async function requestAnimation(params: {
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`Claude request failed: ${response.status} ${text}`);
+    throw new Error(`Model request failed: ${response.status} ${text}`);
   }
   const json = await response.json();
   return json.spec as P5SketchSpec;
