@@ -180,27 +180,18 @@ All colors MUST be HSL.
     @apply transition-all duration-300 ease-in-out;
   }
 
-  .pdf-viewer-container:hover {
-    box-shadow: var(--shadow-elegant);
-  }
 
   .pdf-page {
     @apply transition-all duration-200 ease-in-out;
     filter: drop-shadow(0 4px 12px hsl(var(--primary) / 0.1));
   }
 
-  .pdf-page:hover {
-    filter: drop-shadow(0 8px 24px hsl(var(--primary) / 0.15));
-  }
 
   /* Text selection highlight */
   .textLayer span[data-span] {
     @apply transition-colors duration-150 ease-in-out;
   }
 
-  .textLayer span[data-span]:hover {
-    @apply bg-accent/20;
-  }
 
   /* Enhanced text selection styling */
   .textLayer::selection {
@@ -283,9 +274,6 @@ All colors MUST be HSL.
     @apply transition-colors duration-150 ease-in-out;
   }
 
-  .react-pdf__Page__textContent span:hover {
-    @apply bg-accent/20;
-  }
 
   .react-pdf__Page__annotations {
     @apply transition-all duration-150 ease-in-out;

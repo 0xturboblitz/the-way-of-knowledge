@@ -1,14 +1,22 @@
-import React from 'react';
+import { useState, useRef } from 'react';
 import { PhysicsTextbook } from '@/components/PhysicsTextbook';
 
 const Index = () => {
-  // Local PDF file - using full-size PDF for reliability
-  const pdfUrl = "/electrodynamics-high-res.pdf";
-  
-  // Alternative PDF URLs (commented out)
-  // const pdfUrl = "https://www.hlevkin.com/hlevkin/90MathPhysBioBooks/Physics/Physics/Electrodynamics/David%20J.%20Griffiths%20-%20Introduction%20to%20Electrodynamics-Prentice%20Hall%20(1999).pdf";
-  // const pdfUrl = "https://www.phys.ufl.edu/~pjh/teaching/phy2048/griffiths_electrodynamics.pdf";
-  // const pdfUrl = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
+  // const [pdfUrl, setPdfUrl] = useState("/rlpr.pdf");
+  const [pdfUrl, setPdfUrl] = useState("/electrodynamics-high-res.pdf");
+  const [title, setTitle] = useState("The Way of Electrodynamics");
+  const [subtitle, setSubtitle] = useState("Experience Griffiths' Introduction to Electrodynamics like never before.");
+  const pdfViewerRef = useRef<{ triggerUpload: () => void }>(null);
+
+  const handlePdfUpload = (url: string, newTitle: string, newSubtitle: string) => {
+    setPdfUrl(url);
+    setTitle(newTitle);
+    setSubtitle(newSubtitle);
+  };
+
+  const handleUploadClick = () => {
+    pdfViewerRef.current?.triggerUpload();
+  };
 
   return (
     <div className="h-screen bg-background flex flex-col">
@@ -17,10 +25,17 @@ const Index = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="way-of-physics-title text-2xl md:text-3xl mb-2 animate-fade-in-elegant">
-              The Way of Electrodynamics
+              {title}
             </h1>
             <p className="text-sm text-foreground leading-relaxed max-w-2xl mx-auto">
-              Experience Griffiths' <em>Introduction to Electrodynamics</em> like never before.
+              {subtitle} Or{' '}
+              <button 
+                onClick={handleUploadClick}
+                className="text-accent hover:text-accent/80 underline underline-offset-2 transition-colors cursor-pointer font-medium"
+              >
+                upload your own PDF
+              </button>
+              .
             </p>
           </div>
         </div>
@@ -28,7 +43,7 @@ const Index = () => {
 
       {/* Main Content - Uses remaining height */}
       <main className="flex-1 min-h-0 overflow-hidden">
-        <PhysicsTextbook pdfUrl={pdfUrl} />
+        <PhysicsTextbook pdfUrl={pdfUrl} onPdfUpload={handlePdfUpload} ref={pdfViewerRef} />
       </main>
 
       {/* Footer - Compact */}

@@ -12,6 +12,125 @@ export default defineConfig(({ mode }) => {
     name: "dev-claude-animation-endpoint",
     apply: "serve" as const,
     configureServer(server: any) {
+      // Title generation endpoint
+      server.middlewares.use("/api/generate-titles", async (req: any, res: any) => {
+        if (req.method !== "POST") {
+          res.statusCode = 405;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: "Method not allowed" }));
+          return;
+        }
+
+        try {
+          const chunks: Buffer[] = [];
+          await new Promise<void>((resolve, reject) => {
+            req.on("data", (c: Buffer) => chunks.push(c));
+            req.on("end", () => resolve());
+            req.on("error", (err: Error) => reject(err));
+          });
+          const raw = Buffer.concat(chunks).toString("utf8");
+          const body = raw ? JSON.parse(raw) : {};
+
+          const { pdfText } = body || {};
+          if (!pdfText) {
+            res.statusCode = 400;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: "pdfText is required" }));
+            return;
+          }
+
+          const openrouterApiKey = env.OPENROUTER_API_KEY;
+          if (!openrouterApiKey) {
+            res.statusCode = 500;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: "OpenRouter API key not configured" }));
+            return;
+          }
+
+          const prompt = `Based on the following text from a PDF document, generate a title and subtitle in the style of "The Way of [Subject]" and "Experience [Document/Author] like never before. Select text to see live simulations."
+
+PDF Text:
+${pdfText}
+
+Please analyze the content and respond with a JSON object containing:
+{
+  "title": "The Way of [extracted subject/topic]",
+  "subtitle": "Experience [document name/author/topic] like never before. Select text to see live simulations."
+}
+
+Examples:
+- For an electrodynamics textbook: {"title": "The Way of Electrodynamics", "subtitle": "Experience Griffiths' Introduction to Electrodynamics like never before. Select text to see live simulations."}
+- For a machine learning paper: {"title": "The Way of Machine Learning", "subtitle": "Experience this ML research paper like never before. Select text to see live simulations."}
+- For a quantum mechanics text: {"title": "The Way of Quantum Mechanics", "subtitle": "Experience quantum physics like never before. Select text to see live simulations."}
+
+Extract the main subject/topic and create appropriate titles that follow this pattern.`;
+
+          const openrouterResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${openrouterApiKey}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": "http://localhost:5173",
+              "X-Title": "Electro Code Canvas"
+            },
+            body: JSON.stringify({
+              model: "anthropic/claude-3.5-sonnet",
+              messages: [
+                {
+                  role: "user",
+                  content: prompt
+                }
+              ],
+              max_tokens: 500,
+              temperature: 0.7
+            })
+          });
+
+          if (!openrouterResponse.ok) {
+            throw new Error(`OpenRouter API error: ${openrouterResponse.status}`);
+          }
+
+          const openrouterData = await openrouterResponse.json() as any;
+          const content = openrouterData.choices?.[0]?.message?.content;
+
+          if (!content) {
+            throw new Error("No content received from OpenRouter");
+          }
+
+          // Try to parse JSON from the response
+          let result;
+          try {
+            // Look for JSON in the response
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              result = JSON.parse(jsonMatch[0]);
+            } else {
+              throw new Error("No JSON found in response");
+            }
+          } catch (parseError) {
+            // Fallback: create titles from the text content
+            console.warn("Failed to parse JSON response, using fallback", parseError);
+            result = {
+              title: "The Way of Knowledge",
+              subtitle: "Experience this document like never before. Select text to see live simulations."
+            };
+          }
+
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify(result));
+
+        } catch (error) {
+          console.error("Title generation error:", error);
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ 
+            error: "Failed to generate titles",
+            title: "The Way of Knowledge",
+            subtitle: "Experience this document like never before. Select text to see live simulations."
+          }));
+        }
+      });
+
       server.middlewares.use("/api/animation", async (req: any, res: any) => {
         if (req.method !== "POST") {
           res.statusCode = 405;

@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import { PhysicsVisualization } from './PhysicsVisualization';
 import { BeautifulPDFViewer } from './BeautifulPDFViewer';
-import { SettingsMenu } from './SettingsMenu';
 import { toast } from 'sonner';
-import { requestAnimation, type P5SketchSpec, type ModelResult } from '@/lib/animation';
+import { requestAnimation, type ModelResult } from '@/lib/animation';
 import { useSettings } from '@/contexts/SettingsContext';
 
 interface PhysicsTextbookProps {
   pdfUrl: string;
+  onPdfUpload?: (url: string, title: string, subtitle: string) => void;
 }
 
-export const PhysicsTextbook: React.FC<PhysicsTextbookProps> = ({ pdfUrl }) => {
+export const PhysicsTextbook = forwardRef<{ triggerUpload: () => void }, PhysicsTextbookProps>(({ pdfUrl, onPdfUpload }, ref) => {
   const { getEnabledModels, isMultiModelMode } = useSettings();
   const [activeConcept, setActiveConcept] = useState<string | null>(null);
   const [modelResults, setModelResults] = useState<ModelResult[]>([]);
@@ -18,6 +18,14 @@ export const PhysicsTextbook: React.FC<PhysicsTextbookProps> = ({ pdfUrl }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const abortRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<number | null>(null);
+  const pdfViewerRef = useRef<{ triggerUpload: () => void }>(null);
+
+  // Expose triggerUpload method to parent component
+  useImperativeHandle(ref, () => ({
+    triggerUpload: () => {
+      pdfViewerRef.current?.triggerUpload();
+    }
+  }));
 
   const requestAnim = (selectionText: string, pageContext: string, pageNumber: number | null) => {
     if (abortRef.current) {
@@ -79,7 +87,7 @@ export const PhysicsTextbook: React.FC<PhysicsTextbookProps> = ({ pdfUrl }) => {
       console.log('fullPageText:', fullPageText);
       toast.success(`Selected: "${meaningful.substring(0, 50)}${meaningful.length > 50 ? '...' : ''}"`);
       requestAnim(meaningful, fullContext, pageNumber);
-    }, 200);
+    }, 500);
   };
 
   return (
@@ -89,6 +97,8 @@ export const PhysicsTextbook: React.FC<PhysicsTextbookProps> = ({ pdfUrl }) => {
         <BeautifulPDFViewer 
           pdfUrl={pdfUrl}
           onTextSelection={handleTextSelection}
+          onPdfUpload={onPdfUpload}
+          ref={pdfViewerRef}
           className="h-full"
         />
       </div>
@@ -107,4 +117,4 @@ export const PhysicsTextbook: React.FC<PhysicsTextbookProps> = ({ pdfUrl }) => {
       </div>
     </div>
   );
-};
+});

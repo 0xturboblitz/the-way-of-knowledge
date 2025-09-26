@@ -1,19 +1,17 @@
-import React, { useState, useEffect, useRef, forwardRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, useCallback, useMemo, useImperativeHandle } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { 
-  ChevronLeft, 
-  ChevronRight, 
   ZoomIn, 
   ZoomOut, 
   RotateCcw, 
   Download, 
   Maximize2,
   BookOpen,
-  FileText,
   Loader2,
-  Hash
+  Hash,
+  Upload
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -27,12 +25,16 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 interface BeautifulPDFViewerProps {
   pdfUrl: string;
   onTextSelection?: (text: string, context: string, pageNumber: number, fullPageText: string) => void;
+  onPdfUpload?: (url: string, title: string, subtitle: string) => void;
   className?: string;
 }
 
-export const BeautifulPDFViewer = forwardRef<HTMLDivElement, BeautifulPDFViewerProps>(
-  ({ pdfUrl, onTextSelection, className }, ref) => {
+export const BeautifulPDFViewer = forwardRef<{ triggerUpload: () => void }, BeautifulPDFViewerProps>(
+  ({ pdfUrl, onTextSelection, onPdfUpload, className }, ref) => {
     const [isLoading, setIsLoading] = useState(true);
+    const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
+    const [pdfName, setPdfName] = useState("Document.pdf");
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [error, setError] = useState<string | null>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [numPages, setNumPages] = useState<number | null>(null);
@@ -41,6 +43,13 @@ export const BeautifulPDFViewer = forwardRef<HTMLDivElement, BeautifulPDFViewerP
     const [rotation, setRotation] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
     const contentContainerRef = useRef<HTMLDivElement>(null);
+
+    // Expose triggerUpload method to parent component
+    useImperativeHandle(ref, () => ({
+      triggerUpload: () => {
+        fileInputRef.current?.click();
+      }
+    }));
     const [containerWidth, setContainerWidth] = useState<number>(800);
     const [containerHeight, setContainerHeight] = useState<number>(800);
     const [currentPageFullText, setCurrentPageFullText] = useState<string>("");
@@ -61,6 +70,34 @@ export const BeautifulPDFViewer = forwardRef<HTMLDivElement, BeautifulPDFViewerP
       standardFontDataUrl: '/standard_fonts/',
       wasmUrl: '/wasm/',
     }), []);
+
+    // Extract PDF name from URL when pdfUrl changes
+    useEffect(() => {
+      const extractPdfNameFromUrl = (url: string) => {
+        try {
+          // Handle blob URLs (uploaded files) - keep existing name
+          if (url.startsWith('blob:')) {
+            return pdfName;
+          }
+          
+          // Handle regular URLs
+          const urlObj = new URL(url, window.location.origin);
+          const pathname = urlObj.pathname;
+          const filename = pathname.split('/').pop() || 'Document.pdf';
+          
+          // Decode URI components and ensure .pdf extension
+          const decodedFilename = decodeURIComponent(filename);
+          return decodedFilename.endsWith('.pdf') ? decodedFilename : `${decodedFilename}.pdf`;
+        } catch {
+          return 'Document.pdf';
+        }
+      };
+
+      // Only update name if it's not from an uploaded file (blob URL)
+      if (!pdfUrl.startsWith('blob:')) {
+        setPdfName(extractPdfNameFromUrl(pdfUrl));
+      }
+    }, [pdfUrl]);
 
     // Track container size for responsive page sizing and virtual scrolling
     useEffect(() => {
@@ -377,8 +414,68 @@ export const BeautifulPDFViewer = forwardRef<HTMLDivElement, BeautifulPDFViewerP
     const downloadPDF = () => {
       const link = document.createElement('a');
       link.href = pdfUrl;
-      link.download = 'Introduction to Electrodynamics.pdf';
+      link.download = pdfName;
       link.click();
+    };
+
+    // PDF upload functionality
+    const extractPdfText = async (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            const pdf = await pdfjs.getDocument({ data: reader.result as ArrayBuffer }).promise;
+            let text = '';
+            const numPages = Math.min(pdf.numPages, 3);
+            for (let i = 1; i <= numPages; i++) {
+              const page = await pdf.getPage(i);
+              const textContent = await page.getTextContent();
+              text += textContent.items.map((item: any) => item.str).join(' ') + ' ';
+            }
+            resolve(text.slice(0, 2000));
+          } catch (error) {
+            reject(error);
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      });
+    };
+
+    const generateTitles = async (pdfText: string) => {
+      const response = await fetch('/api/generate-titles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pdfText }),
+      });
+      if (!response.ok) throw new Error('Failed to generate titles');
+      return response.json();
+    };
+
+    const handlePdfUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file || file.type !== 'application/pdf') {
+        toast.error('Please select a valid PDF file');
+        return;
+      }
+
+      try {
+        setIsGeneratingTitle(true);
+        toast.success('PDF uploaded! Loading...');
+
+        const objectUrl = URL.createObjectURL(file);
+        setPdfName(file.name); // Set the actual filename
+        const pdfText = await extractPdfText(file);
+        const { title, subtitle } = await generateTitles(pdfText);
+        
+        onPdfUpload?.(objectUrl, title, subtitle);
+        toast.success('New titles generated successfully!');
+      } catch (error) {
+        console.error('Error processing PDF:', error);
+        toast.error('Failed to process PDF. Please try again.');
+      } finally {
+        setIsGeneratingTitle(false);
+      }
     };
 
     // Fullscreen functions
@@ -435,7 +532,7 @@ export const BeautifulPDFViewer = forwardRef<HTMLDivElement, BeautifulPDFViewerP
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
               <BookOpen className="h-4 w-4 text-accent" />
-              <span className="text-sm font-medium text-foreground">Introduction to Electrodynamics.pdf</span>
+              <span className="text-sm font-medium text-foreground">{pdfName}</span>
             </div>
             {numPages && (
               <span className="text-xs text-muted-foreground">
@@ -474,6 +571,15 @@ export const BeautifulPDFViewer = forwardRef<HTMLDivElement, BeautifulPDFViewerP
 
             {/* Other Controls */}
             <div className="flex items-center gap-1">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => fileInputRef.current?.click()} 
+                disabled={isGeneratingTitle}
+                className="pdf-control-button h-8 w-8 p-0"
+              >
+                {isGeneratingTitle ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              </Button>
               <Button variant="ghost" size="sm" onClick={rotatePage} className="pdf-control-button h-8 w-8 p-0">
                 <RotateCcw className="h-4 w-4" />
               </Button>
@@ -484,11 +590,20 @@ export const BeautifulPDFViewer = forwardRef<HTMLDivElement, BeautifulPDFViewerP
                 <Download className="h-4 w-4" />
               </Button>
             </div>
+            
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf"
+              onChange={handlePdfUpload}
+              className="hidden"
+            />
           </div>
         </div>
 
         {/* PDF Content */}
-        <div ref={ref} className="relative flex-1 overflow-auto bg-muted/5">
+        <div ref={contentContainerRef} className="relative flex-1 overflow-auto bg-muted/5">
           <div className="flex justify-center p-2 h-full">
             {isLoading && (
               <div className="flex items-center justify-center h-96">

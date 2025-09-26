@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type p5 from 'p5';
 import { P5SketchSpec } from '@/lib/animation';
-import { isWebGLAvailable, getOptimalWebGLAttributes, setupWebGLContextHandlers } from '@/utils/webgl';
+import { isWebGLAvailable, setupWebGLContextHandlers } from '@/utils/webgl';
 
 interface P5RunnerProps {
   spec: P5SketchSpec | null;
