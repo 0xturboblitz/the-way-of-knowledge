@@ -15,12 +15,27 @@ export interface P5SketchSpec {
   };
 }
 
+export interface ModelResult {
+  modelId: string;
+  modelName: string;
+  success: boolean;
+  error: string | null;
+  responseTime: number;
+  spec: P5SketchSpec | null;
+}
+
+export interface AnimationResponse {
+  results: ModelResult[];
+}
+
 export async function requestAnimation(params: {
   selectionText: string;
   pageContext: string;
   pageNumber: number | null;
+  multiModelMode?: boolean;
+  enabledModels?: { id: string; enabled: boolean; }[];
   signal?: AbortSignal;
-}): Promise<P5SketchSpec> {
+}): Promise<AnimationResponse> {
   const response = await fetch("/api/animation", {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -28,6 +43,8 @@ export async function requestAnimation(params: {
       selectionText: params.selectionText,
       pageContext: params.pageContext,
       pageNumber: params.pageNumber,
+      multiModelMode: params.multiModelMode,
+      enabledModels: params.enabledModels,
     }),
     signal: params.signal,
   });
@@ -37,7 +54,7 @@ export async function requestAnimation(params: {
     throw new Error(`Model request failed: ${response.status} ${text}`);
   }
   const json = await response.json();
-  return json.spec as P5SketchSpec;
+  return json as AnimationResponse;
 }
 
 

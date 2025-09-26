@@ -1,16 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PhysicsVisualization } from './PhysicsVisualization';
 import { BeautifulPDFViewer } from './BeautifulPDFViewer';
+import { SettingsMenu } from './SettingsMenu';
 import { toast } from 'sonner';
-import { requestAnimation, type P5SketchSpec } from '@/lib/animation';
+import { requestAnimation, type P5SketchSpec, type ModelResult } from '@/lib/animation';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface PhysicsTextbookProps {
   pdfUrl: string;
 }
 
 export const PhysicsTextbook: React.FC<PhysicsTextbookProps> = ({ pdfUrl }) => {
+  const { getEnabledModels, isMultiModelMode } = useSettings();
   const [activeConcept, setActiveConcept] = useState<string | null>(null);
-  const [spec, setSpec] = useState<P5SketchSpec | null>(null);
+  const [modelResults, setModelResults] = useState<ModelResult[]>([]);
+  const [activeModelIndex, setActiveModelIndex] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const abortRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<number | null>(null);
@@ -22,9 +26,30 @@ export const PhysicsTextbook: React.FC<PhysicsTextbookProps> = ({ pdfUrl }) => {
     const controller = new AbortController();
     abortRef.current = controller;
     setLoading(true);
-    requestAnimation({ selectionText, pageContext, pageNumber, signal: controller.signal })
-      .then(result => {
-        setSpec(result);
+    
+    const enabledModels = getEnabledModels();
+    const multiModelMode = isMultiModelMode();
+    
+    requestAnimation({ 
+      selectionText, 
+      pageContext, 
+      pageNumber, 
+      multiModelMode,
+      enabledModels: enabledModels.map(m => ({ id: m.id, enabled: m.enabled })),
+      signal: controller.signal 
+    })
+      .then(response => {
+        setModelResults(response.results);
+        // Set active model to the first successful one
+        const firstSuccessIndex = response.results.findIndex(r => r.success);
+        setActiveModelIndex(firstSuccessIndex >= 0 ? firstSuccessIndex : 0);
+        
+        const successCount = response.results.filter(r => r.success).length;
+        if (multiModelMode) {
+          toast.success(`Generated ${successCount} animations from ${response.results.length} models`);
+        } else {
+          toast.success(successCount > 0 ? 'Animation generated successfully!' : 'Animation generation failed');
+        }
       })
       .catch(err => {
         if (controller.signal.aborted) return;
@@ -54,7 +79,7 @@ export const PhysicsTextbook: React.FC<PhysicsTextbookProps> = ({ pdfUrl }) => {
       console.log('fullPageText:', fullPageText);
       toast.success(`Selected: "${meaningful.substring(0, 50)}${meaningful.length > 50 ? '...' : ''}"`);
       requestAnim(meaningful, fullContext, pageNumber);
-    }, 1800);
+    }, 200);
   };
 
   return (
@@ -73,8 +98,11 @@ export const PhysicsTextbook: React.FC<PhysicsTextbookProps> = ({ pdfUrl }) => {
         <PhysicsVisualization 
           concept={activeConcept}
           isVisible={!!activeConcept}
-          sketchSpec={spec}
+          modelResults={modelResults}
+          activeModelIndex={activeModelIndex}
+          onModelChange={setActiveModelIndex}
           isLoading={loading}
+          multiModelMode={isMultiModelMode()}
         />
       </div>
     </div>

@@ -211,8 +211,6 @@ export const BeautifulPDFViewer = forwardRef<HTMLDivElement, BeautifulPDFViewerP
     }, []);
 
     const onPageLoadSuccess = useCallback((pageNum?: number) => {
-      console.log('Page loaded successfully', pageNum);
-      
       // Set up text selection detection after page loads
       setTimeout(() => {
         setupTextSelectionListeners();
@@ -232,7 +230,6 @@ export const BeautifulPDFViewer = forwardRef<HTMLDivElement, BeautifulPDFViewerP
               if (pageCanvas) {
                 const actualHeight = pageCanvas.offsetHeight + 40; // Add some padding
                 setActualPageHeight(actualHeight);
-                console.log('Measured page height:', actualHeight);
               }
             }
           }

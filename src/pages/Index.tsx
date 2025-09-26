@@ -19,12 +19,8 @@ const Index = () => {
             <h1 className="way-of-physics-title text-2xl md:text-3xl mb-2 animate-fade-in-elegant">
               The Way of Electrodynamics
             </h1>
-            {/* <h2 className="text-lg md:text-xl text-muted-foreground mb-3 italic">
-              Interactive Physics
-            </h2> */}
             <p className="text-sm text-foreground leading-relaxed max-w-2xl mx-auto">
               Experience Griffiths' <em>Introduction to Electrodynamics</em> like never before.
-              Select text to see live physics simulations.
             </p>
           </div>
         </div>
