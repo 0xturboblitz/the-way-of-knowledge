@@ -52,8 +52,125 @@ export const P5Runner: React.FC<P5RunnerProps> = ({ spec, className }) => {
       const setupBody = spec.sketch.setup || '';
       const drawBody = spec.sketch.draw || '';
 
-      const setupFn = new Function('p', 'state', 'ctx', setupBody) as (p: p5, state: any, ctx: { width: number; height: number }) => void;
-      const drawFn = new Function('p', 'state', 'ctx', drawBody) as (p: p5, state: any, ctx: { width: number; height: number }) => void;
+      // Create a shared execution context by wrapping both setup and draw in a single function
+      // This allows variables defined in setup to be accessible in draw
+      const sharedContextCode = `
+        // Shared variables scope - variables declared here are accessible to both setup and draw
+        let setupFn, drawFn;
+        
+        // p5.js constants passed as variables (can be redefined by models if needed)
+        // Mathematical constants
+        let PI = Math.PI;
+        let TWO_PI = Math.PI * 2;
+        let HALF_PI = Math.PI / 2;
+        let QUARTER_PI = Math.PI / 4;
+        let TAU = Math.PI * 2;
+        
+        // Shape mode constants
+        let CORNER = 'corner';
+        let CORNERS = 'corners';
+        let CENTER = 'center';
+        let RADIUS = 'radius';
+        
+        // Color mode constants
+        let RGB = 'rgb';
+        let HSB = 'hsb';
+        let HSL = 'hsl';
+        
+        // Angle mode constants
+        let DEGREES = 'degrees';
+        let RADIANS = 'radians';
+        
+        // Blend mode constants
+        let BLEND = 'source-over';
+        let ADD = 'lighter';
+        let DARKEST = 'darken';
+        let LIGHTEST = 'lighten';
+        let DIFFERENCE = 'difference';
+        let EXCLUSION = 'exclusion';
+        let MULTIPLY = 'multiply';
+        let SCREEN = 'screen';
+        let REPLACE = 'copy';
+        let OVERLAY = 'overlay';
+        let HARD_LIGHT = 'hard-light';
+        let SOFT_LIGHT = 'soft-light';
+        let DODGE = 'color-dodge';
+        let BURN = 'color-burn';
+        
+        // Key constants
+        let BACKSPACE = 8;
+        let DELETE = 46;
+        let ENTER = 13;
+        let RETURN = 13;
+        let TAB = 9;
+        let ESCAPE = 27;
+        let SHIFT = 16;
+        let CONTROL = 17;
+        let OPTION = 18;
+        let ALT = 18;
+        let UP_ARROW = 38;
+        let DOWN_ARROW = 40;
+        let LEFT_ARROW = 37;
+        let RIGHT_ARROW = 39;
+        
+        // Mouse button constants
+        let LEFT = 'left';
+        let RIGHT = 'right';
+        
+        // Renderer constants
+        let P2D = 'p2d';
+        let WEBGL = 'webgl';
+        
+        // Common p5.js functions as variables (to prevent errors)
+        let min = Math.min;
+        let max = Math.max;
+        let abs = Math.abs;
+        let ceil = Math.ceil;
+        let floor = Math.floor;
+        let round = Math.round;
+        let sqrt = Math.sqrt;
+        let pow = Math.pow;
+        let sin = Math.sin;
+        let cos = Math.cos;
+        let tan = Math.tan;
+        let asin = Math.asin;
+        let acos = Math.acos;
+        let atan = Math.atan;
+        let atan2 = Math.atan2;
+        let degrees = (radians) => radians * 180 / Math.PI;
+        let radians = (degrees) => degrees * Math.PI / 180;
+        let map = (value, start1, stop1, start2, stop2) => start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));
+        let lerp = (start, stop, amt) => start + (stop - start) * amt;
+        let constrain = (amt, low, high) => Math.max(Math.min(amt, high), low);
+        let dist = (x1, y1, x2, y2) => Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+        let mag = (x, y) => Math.sqrt(x * x + y * y);
+        let norm = (value, start, stop) => (value - start) / (stop - start);
+        let sq = (x) => x * x;
+        
+        // Handle background() calls gracefully - models might call this despite instructions
+        let background = (...args) => {
+          console.warn('background() called in user code - this is handled by the host');
+          // Don't actually call p.background() here as it's handled by the host
+        };
+        
+        // Setup function with access to shared scope
+        setupFn = function(p, state, ctx) {
+          ${setupBody}
+        };
+        
+        // Draw function with access to shared scope  
+        drawFn = function(p, state, ctx) {
+          ${drawBody}
+        };
+        
+        return { setupFn, drawFn };
+      `;
+      
+      const contextFactory = new Function(sharedContextCode);
+      const { setupFn, drawFn } = contextFactory() as {
+        setupFn: (p: p5, state: any, ctx: { width: number; height: number }) => void;
+        drawFn: (p: p5, state: any, ctx: { width: number; height: number }) => void;
+      };
 
       const sketch = (p: p5) => {
         p.setup = () => {

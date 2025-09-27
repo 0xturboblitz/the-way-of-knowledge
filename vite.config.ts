@@ -1,7 +1,33 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import fs from "fs";
 import { componentTagger } from "lovable-tagger";
+
+// Helper function to ensure logs directory exists and write parsed JSON
+const writeLogFile = (modelId: string, data: any, type: 'raw' | 'parsed' = 'parsed') => {
+  try {
+    const logsDir = path.join(process.cwd(), 'logs');
+    
+    // Ensure logs directory exists
+    if (!fs.existsSync(logsDir)) {
+      fs.mkdirSync(logsDir, { recursive: true });
+    }
+    
+    // Generate timestamp in ISO format
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    // Replace forward slashes in modelId to avoid directory path issues
+    const safeModelId = modelId.replace(/\//g, '-');
+    const filename = `${type}-${safeModelId}-${timestamp}.json`;
+    const filepath = path.join(logsDir, filename);
+    
+    // Write the JSON data to file
+    fs.writeFileSync(filepath, JSON.stringify(data, null, 2), 'utf8');
+    console.log(`Logged ${type} response for ${modelId} to ${filename}`);
+  } catch (error) {
+    console.error(`Failed to write log file for ${modelId}:`, error);
+  }
+};
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -200,9 +226,11 @@ CONSTRAINTS AND CONTRACT:
 - Do NOT call p.createCanvas. The host will call p.createCanvas(ctx.width, ctx.height) automatically.
 - Use only (p, state, ctx) provided by the host. p is the p5 instance.
 - Use ctx.width and ctx.height to size elements so it fits parent, never exceeding page height.
+- Don't call background() in draw. The host will call background(state.background) automatically. If you do call background(), it will be ignored.
 - Do not import or reference external libraries. Only standard p5 APIs.
 - Keep drawing performant: avoid creating new arrays/objects in draw loops unnecessarily.
 - The code in setup/draw must be valid, self-contained JavaScript bodies, not wrapped in function declarations.
+- SHARED EXECUTION CONTEXT: Variables defined in setup are accessible in draw. To create shared variables, declare them WITHOUT let/const/var in setup (e.g., 'myVar = 10;' not 'let myVar = 10;'). This makes them accessible in draw.
 - IMPORTANT: All newlines in JavaScript code strings must be escaped as \\n, not actual newlines.
 - Return ONLY the JSON object, no markdown, no explanations, no code fences.
 `
@@ -231,7 +259,6 @@ Remember to:
             { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", model: "google/gemini-2.5-flash" },
             { id: "gemini-2.0-flash-001", name: "Gemini 2.0 Flash", model: "google/gemini-2.0-flash-001" },
             { id: "grok-code-fast-1", name: "Grok Code Fast", model: "x-ai/grok-code-fast-1" },
-            { id: "mistralai/ministral-3b", name: "Mistral 3b", model: "mistralai/ministral-3b" }
           ];
 
           // Determine which models to use based on mode and settings
@@ -337,6 +364,9 @@ Remember to:
 
               const data = await response.json() as any;
               let spec = data.choices?.[0]?.message?.content;
+              
+              // Log raw response
+              writeLogFile(modelInfo.id, data, 'raw');
               
               if (!spec) {
                 return {

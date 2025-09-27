@@ -20,9 +20,7 @@ const defaultModels: ModelConfig[] = [
   { id: "gpt-4.1-mini", name: "GPT-4.1 Mini", model: "openai/gpt-4.1-mini", enabled: false },
   { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", model: "google/gemini-2.5-flash", enabled: false },
   { id: "gemini-2.0-flash-001", name: "Gemini 2.0 Flash", model: "google/gemini-2.0-flash-001", enabled: false },
-  { id: "aion-labs/aion-1.0-mini", name: "Aion 1.0 Mini", model: "aion-labs/aion-1.0-mini", enabled: false },
   { id: "grok-code-fast-1", name: "Grok Code Fast", model: "x-ai/grok-code-fast-1", enabled: false },
-  { id: "mistralai/ministral-3b", name: "Mistral 3b", model: "mistralai/ministral-3b", enabled: false }
 ];
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
