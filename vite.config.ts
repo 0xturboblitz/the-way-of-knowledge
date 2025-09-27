@@ -233,6 +233,7 @@ CONSTRAINTS AND CONTRACT:
 - SHARED EXECUTION CONTEXT: Variables defined in setup are accessible in draw. To create shared variables, declare them WITHOUT let/const/var in setup (e.g., 'myVar = 10;' not 'let myVar = 10;'). This makes them accessible in draw.
 - IMPORTANT: All newlines in JavaScript code strings must be escaped as \\n, not actual newlines.
 - Return ONLY the JSON object, no markdown, no explanations, no code fences.
+- Do NOT use any WebGL-specific functions. Do NOT use 3D shapes. Only do 2D.
 `
 
 
@@ -365,9 +366,6 @@ Remember to:
               const data = await response.json() as any;
               let spec = data.choices?.[0]?.message?.content;
               
-              // Log raw response
-              writeLogFile(modelInfo.id, data, 'raw');
-              
               if (!spec) {
                 return {
                   modelId: modelInfo.id,
@@ -401,6 +399,8 @@ Remember to:
                   };
                 }
               }
+
+              writeLogFile(modelInfo.id, spec, 'parsed');
 
               // Minimal validation
               const isValid = spec && spec.version === "p5.v1" && spec.sketch && typeof spec.sketch.setup === "string" && typeof spec.sketch.draw === "string";
