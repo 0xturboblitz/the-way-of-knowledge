@@ -288,7 +288,16 @@ Remember to:
             modelsToUse = [allModels[0]];
           }
 
-          // Call selected models in parallel
+          // Set up streaming response headers
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "text/plain");
+          res.setHeader("Cache-Control", "no-cache");
+          res.setHeader("Connection", "keep-alive");
+
+          let completedCount = 0;
+          const totalModels = modelsToUse.length;
+
+          // Call selected models in parallel and stream results as they arrive
           const modelPromises = modelsToUse.map(async (modelInfo) => {
             const startTime = Date.now();
             try {
@@ -353,21 +362,31 @@ Remember to:
 
               if (!response.ok) {
                 const errText = await response.text();
-                return {
-                  modelId: modelInfo.id,
-                  modelName: modelInfo.name,
-                  success: false,
-                  error: `API error: ${response.status} ${errText}`,
-                  responseTime,
-                  spec: null
-                };
+              const result = {
+                modelId: modelInfo.id,
+                modelName: modelInfo.name,
+                success: false,
+                error: `API error: ${response.status} ${errText}`,
+                responseTime,
+                spec: null
+              };
+              
+              // Stream this result immediately
+              res.write(JSON.stringify(result) + '\n');
+              
+              completedCount++;
+              if (completedCount === totalModels) {
+                res.end();
+              }
+              
+              return result;
               }
 
               const data = await response.json() as any;
               let spec = data.choices?.[0]?.message?.content;
               
               if (!spec) {
-                return {
+                const result = {
                   modelId: modelInfo.id,
                   modelName: modelInfo.name,
                   success: false,
@@ -375,6 +394,16 @@ Remember to:
                   responseTime,
                   spec: null
                 };
+                
+                // Stream this result immediately
+                res.write(JSON.stringify(result) + '\n');
+                
+                completedCount++;
+                if (completedCount === totalModels) {
+                  res.end();
+                }
+                
+                return result;
               }
 
               // If spec is a string (fallback for when structured output fails), try to parse it
@@ -389,7 +418,7 @@ Remember to:
                     spec = JSON.parse(spec);
                   }
                 } catch (e) {
-                  return {
+                  const result = {
                     modelId: modelInfo.id,
                     modelName: modelInfo.name,
                     success: false,
@@ -397,6 +426,16 @@ Remember to:
                     responseTime,
                     spec: null
                   };
+                  
+                  // Stream this result immediately
+                  res.write(JSON.stringify(result) + '\n');
+                  
+                  completedCount++;
+                  if (completedCount === totalModels) {
+                    res.end();
+                  }
+                  
+                  return result;
                 }
               }
 
@@ -404,8 +443,10 @@ Remember to:
 
               // Minimal validation
               const isValid = spec && spec.version === "p5.v1" && spec.sketch && typeof spec.sketch.setup === "string" && typeof spec.sketch.draw === "string";
+              
+              let result;
               if (!isValid) {
-                return {
+                result = {
                   modelId: modelInfo.id,
                   modelName: modelInfo.name,
                   success: false,
@@ -413,20 +454,30 @@ Remember to:
                   responseTime,
                   spec: null
                 };
+              } else {
+                result = {
+                  modelId: modelInfo.id,
+                  modelName: modelInfo.name,
+                  success: true,
+                  error: null,
+                  responseTime,
+                  spec
+                };
               }
-
-              return {
-                modelId: modelInfo.id,
-                modelName: modelInfo.name,
-                success: true,
-                error: null,
-                responseTime,
-                spec
-              };
+              
+              // Stream this result immediately
+              res.write(JSON.stringify(result) + '\n');
+              
+              completedCount++;
+              if (completedCount === totalModels) {
+                res.end();
+              }
+              
+              return result;
 
             } catch (err: any) {
               const responseTime = Date.now() - startTime;
-              return {
+              const result = {
                 modelId: modelInfo.id,
                 modelName: modelInfo.name,
                 success: false,
@@ -434,15 +485,26 @@ Remember to:
                 responseTime,
                 spec: null
               };
+              
+              // Stream this result immediately
+              res.write(JSON.stringify(result) + '\n');
+              
+              completedCount++;
+              if (completedCount === totalModels) {
+                res.end();
+              }
+              
+              return result;
             }
           });
 
-          // Wait for all models to complete
-          const results = await Promise.all(modelPromises);
-
-          res.statusCode = 200;
-          res.setHeader("Content-Type", "application/json");
-          res.end(JSON.stringify({ results }));
+          // Don't wait for all promises - they stream individually
+          Promise.all(modelPromises).catch(() => {
+            // Ensure response ends even if there's an error
+            if (!res.headersSent) {
+              res.end();
+            }
+          });
         } catch (err: any) {
           res.statusCode = 500;
           res.setHeader("Content-Type", "application/json");
