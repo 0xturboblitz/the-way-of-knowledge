@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type p5 from 'p5';
 import { P5SketchSpec } from '@/lib/animation';
-import { isWebGLAvailable, setupWebGLContextHandlers } from '@/utils/webgl';
 
 interface P5RunnerProps {
   spec: P5SketchSpec | null;
@@ -21,8 +20,6 @@ export const P5Runner: React.FC<P5RunnerProps> = ({ spec, className }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const p5Ref = useRef<p5 | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
-  const [webglSupported, setWebglSupported] = useState<boolean>(true);
-  const [contextLost, setContextLost] = useState<boolean>(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -66,31 +63,8 @@ export const P5Runner: React.FC<P5RunnerProps> = ({ spec, className }) => {
           // Keep canvas never taller than parent container
           hostCtx.width = Math.max(100, Math.floor(rect.width));
           hostCtx.height = Math.max(100, Math.floor(rect.height));
-          // Try WebGL first, fallback to 2D if not supported
-          try {
-            if (webglSupported && isWebGLAvailable()) {
-              p.createCanvas(hostCtx.width, hostCtx.height, p.WEBGL);
-              
-              // Set up WebGL context event handlers
-              const canvas = (p as any).canvas as HTMLCanvasElement;
-              const cleanupHandlers = setupWebGLContextHandlers(
-                canvas,
-                () => setContextLost(true),
-                () => setContextLost(false)
-              );
-              
-              // Store cleanup function
-              (p as any)._webglCleanup = cleanupHandlers;
-            } else {
-              // Fallback to 2D canvas
-              p.createCanvas(hostCtx.width, hostCtx.height);
-              setWebglSupported(false);
-            }
-          } catch (error) {
-            console.warn('WebGL failed, falling back to 2D canvas:', error);
-            p.createCanvas(hostCtx.width, hostCtx.height);
-            setWebglSupported(false);
-          }
+          // Create 2D canvas
+          p.createCanvas(hostCtx.width, hostCtx.height);
           try {
             if (spec.sketch.pixelDensity) p.pixelDensity(spec.sketch.pixelDensity);
             if (spec.sketch.frameRate) p.frameRate(spec.sketch.frameRate);
@@ -150,10 +124,6 @@ export const P5Runner: React.FC<P5RunnerProps> = ({ spec, className }) => {
         resizeObserverRef.current = null;
       }
       if (p5Ref.current) {
-        // Clean up WebGL context handlers
-        if ((p5Ref.current as any)._webglCleanup) {
-          (p5Ref.current as any)._webglCleanup();
-        }
         p5Ref.current.remove();
         p5Ref.current = null;
       }
