@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import type p5 from 'p5';
 import { P5SketchSpec } from '@/lib/animation';
 
