@@ -164,7 +164,7 @@ export const PhysicsVisualization: React.FC<PhysicsVisualizationProps> = ({
       </div>
 
       {/* Model Details and Concept */}
-      {concept && (
+      {concept && activeResult?.success && (
         <div className="p-4 border-t border-border bg-card/30 max-h-40 overflow-y-auto">
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-sm font-medium text-foreground">
