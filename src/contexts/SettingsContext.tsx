@@ -16,11 +16,11 @@ export interface SettingsContextType {
 
 const defaultModels: ModelConfig[] = [
   { id: "claude-3.5-haiku", name: "Claude 3.5 Haiku", model: "anthropic/claude-3.5-haiku", enabled: true },
-  { id: "gpt-4o-mini", name: "GPT-4o Mini", model: "openai/gpt-4o-mini", enabled: false },
-  { id: "gpt-4.1-mini", name: "GPT-4.1 Mini", model: "openai/gpt-4.1-mini", enabled: false },
-  { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", model: "google/gemini-2.5-flash", enabled: false },
-  { id: "gemini-2.0-flash-001", name: "Gemini 2.0 Flash", model: "google/gemini-2.0-flash-001", enabled: false },
-  { id: "grok-code-fast-1", name: "Grok Code Fast", model: "x-ai/grok-code-fast-1", enabled: false },
+  { id: "gpt-4o-mini", name: "GPT-4o Mini", model: "openai/gpt-4o-mini", enabled: true },
+  { id: "gpt-4.1-mini", name: "GPT-4.1 Mini", model: "openai/gpt-4.1-mini", enabled: true },
+  { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", model: "google/gemini-2.5-flash", enabled: true },
+  { id: "gemini-2.0-flash-001", name: "Gemini 2.0 Flash", model: "google/gemini-2.0-flash-001", enabled: true },
+  { id: "grok-code-fast-1", name: "Grok Code Fast", model: "x-ai/grok-code-fast-1", enabled: true },
 ];
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
