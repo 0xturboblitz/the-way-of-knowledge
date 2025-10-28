@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { P5Runner } from '@/components/P5Runner';
 import { PhysicsLoader } from './ui/PhysicsLoader';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
@@ -81,19 +81,22 @@ export const PhysicsVisualization: React.FC<PhysicsVisualizationProps> = ({
         </p>
       </div>
 
-      {/* Model Tabs - Only show in multi-model mode */}
+      {/* Model Tabs - Show in multi-model mode when we have results */}
       {multiModelMode && modelResults.length > 0 && (
         <div className="border-b border-border">
-          <Tabs value={activeModelIndex.toString()} onValueChange={(value) => onModelChange(parseInt(value))}>
+          <Tabs value={activeModelIndex >= 0 ? activeModelIndex.toString() : ""} onValueChange={(value) => onModelChange(parseInt(value))}>
             <TabsList className="grid w-full h-auto p-1" style={{ gridTemplateColumns: `repeat(${Math.min(modelResults.length, 8)}, 1fr)` }}>
               {modelResults.map((result, index) => (
                 <TabsTrigger 
                   key={result.modelId} 
                   value={index.toString()}
                   className="flex flex-col items-center gap-1 p-2 text-xs"
+                  disabled={result.isLoading}
                 >
                   <div className="flex items-center gap-1">
-                    {result.success ? (
+                    {result.isLoading ? (
+                      <Loader2 className="h-3 w-3 text-blue-500 animate-spin" />
+                    ) : result.success ? (
                       <CheckCircle className="h-3 w-3 text-green-500" />
                     ) : (
                       <XCircle className="h-3 w-3 text-red-500" />
@@ -104,7 +107,7 @@ export const PhysicsVisualization: React.FC<PhysicsVisualizationProps> = ({
                   </div>
                   <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                     <Clock className="h-2 w-2" />
-                    <span>{result.responseTime}ms</span>
+                    <span>{result.isLoading ? '...' : `${result.responseTime}ms`}</span>
                   </div>
                 </TabsTrigger>
               ))}
@@ -116,7 +119,15 @@ export const PhysicsVisualization: React.FC<PhysicsVisualizationProps> = ({
       <div className="flex-1 relative">
         {activeResult?.success ? (
           <P5Runner spec={activeSpec || null} className="w-full h-full" />
-        ) : activeResult && !activeResult.success ? (
+        ) : activeResult && activeResult.isLoading ? (
+          <div className="h-full flex items-center justify-center p-8">
+            <PhysicsLoader 
+              size="md"
+              text={`Generating animation with ${activeResult.modelName}...`}
+              className="animate-fade-in-elegant"
+            />
+          </div>
+        ) : activeResult && !activeResult.success && !activeResult.isLoading ? (
           <div className="h-full flex items-center justify-center p-8">
             <div className="text-center">
               <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
@@ -141,7 +152,7 @@ export const PhysicsVisualization: React.FC<PhysicsVisualizationProps> = ({
           </div>
         )}
         
-        {isLoading && (
+        {isLoading && !activeResult && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm">
             <PhysicsLoader 
               size="md"
@@ -153,7 +164,7 @@ export const PhysicsVisualization: React.FC<PhysicsVisualizationProps> = ({
       </div>
 
       {/* Model Details and Concept */}
-      {concept && (
+      {concept && activeResult?.success && (
         <div className="p-4 border-t border-border bg-card/30 max-h-40 overflow-y-auto">
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-sm font-medium text-foreground">
