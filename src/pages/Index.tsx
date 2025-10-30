@@ -4,7 +4,7 @@ import { PhysicsTextbook } from '@/components/PhysicsTextbook';
 const Index = () => {
   // const [pdfUrl, setPdfUrl] = useState("/rlpr.pdf");
   const [pdfUrl, setPdfUrl] = useState("/electrodynamics-high-res.pdf");
-  const [title, setTitle] = useState("The Path of Electrodynamics");
+  const [title, setTitle] = useState("The Way of Electrodynamics");
   const [subtitle, setSubtitle] = useState("Experience Griffiths' Introduction to Electrodynamics like never before.");
   const pdfViewerRef = useRef<{ triggerUpload: () => void }>(null);
 

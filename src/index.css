@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* The Path of Code inspired palette - warm, minimalist, elegant */
+    /* The Way of Code inspired palette - warm, minimalist, elegant */
     --background: 46 20% 95%;  /* Warm cream background */
     --foreground: 25 25% 25%;  /* Deep brown text */
 
