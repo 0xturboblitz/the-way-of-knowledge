@@ -17,21 +17,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'OpenRouter API key not configured' });
     }
 
-    const prompt = `Based on the following text from a PDF document, generate a title and subtitle in the style of "The Way of [Subject]" and "Experience [Document/Author] like never before. Select text to see live simulations."
+    const prompt = `Based on the following text from a PDF document, generate a title and subtitle in the style of "The Path of [Subject]" and "Experience [Document/Author] like never before. Select text to see live simulations."
 
 PDF Text:
 ${pdfText}
 
 Please analyze the content and respond with a JSON object containing:
 {
-  "title": "The Way of [extracted subject/topic]",
+  "title": "The Path of [extracted subject/topic]",
   "subtitle": "Experience [document name/author/topic] like never before. Select text to see live simulations."
 }
 
 Examples:
-- For an electrodynamics textbook: {"title": "The Way of Electrodynamics", "subtitle": "Experience Griffiths' Introduction to Electrodynamics like never before. Select text to see live simulations."}
-- For a machine learning paper: {"title": "The Way of Machine Learning", "subtitle": "Experience this ML research paper like never before. Select text to see live simulations."}
-- For a quantum mechanics text: {"title": "The Way of Quantum Mechanics", "subtitle": "Experience quantum physics like never before. Select text to see live simulations."}
+- For an electrodynamics textbook: {"title": "The Path of Electrodynamics", "subtitle": "Experience Griffiths' Introduction to Electrodynamics like never before. Select text to see live simulations."}
+- For a machine learning paper: {"title": "The Path of Machine Learning", "subtitle": "Experience this ML research paper like never before. Select text to see live simulations."}
+- For a quantum mechanics text: {"title": "The Path of Quantum Mechanics", "subtitle": "Experience quantum physics like never before. Select text to see live simulations."}
 
 Extract the main subject/topic and create appropriate titles that follow this pattern.`;
 
@@ -72,7 +72,7 @@ Extract the main subject/topic and create appropriate titles that follow this pa
       }
     } catch (parseError) {
       result = {
-        title: 'The Way of Knowledge',
+        title: 'The Path of Knowledge',
         subtitle: 'Experience this document like never before. Select text to see live simulations.'
       };
     }
@@ -83,7 +83,7 @@ Extract the main subject/topic and create appropriate titles that follow this pa
     console.error('Title generation error:', error);
     return res.status(500).json({ 
       error: 'Failed to generate titles',
-      title: 'The Way of Knowledge',
+      title: 'The Path of Knowledge',
       subtitle: 'Experience this document like never before. Select text to see live simulations.'
     });
   }
